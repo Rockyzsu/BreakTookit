@@ -4,16 +4,29 @@ from pywifi import const
 import pywifi
 from Base import BaseServices
 
-DEFAULT = 2
+DEFAULT = 3.4
 
 class WIFI(BaseServices):
 
     def __init__(self):
         self.logger = self.get_lloger()
         self.wifi=pywifi.PyWiFi()
-        self.iface = self.wifi.interfaces()[0]
+        self.iface = self.wifi.interfaces()[1]
         self.password_list = self.get_password()
-        self.ignore_list=['printer','printers','liubing_5G']
+        self.ignore_list=self.get_ignore()
+        print(self.ignore_list)
+        
+
+    def get_ignore(self):
+        ignore_list = None
+        with open('ignore_list.txt','r') as f:
+            ignore_list=f.readlines()
+        
+        if ignore_list:
+            ignore_l=[i.strip() for i in ignore_list]
+        
+        return ignore_l    
+
     def get_password(self):
         
         password_list=[]
@@ -35,8 +48,17 @@ class WIFI(BaseServices):
         print(len(basewifi))
         ssid_list = []
         for i in basewifi:
-            print(i.ssid)
-            ssid_list.append(i.ssid)
+            
+            try:
+                
+                print(i.ssid+'\n')
+                if len(i.ssid.strip())<1:
+                    continue
+
+                ssid_list.append(i.ssid)
+            except Exception as e:
+                print(e)
+
         
         ssid_set = set(ssid_list)
         
@@ -46,14 +68,23 @@ class WIFI(BaseServices):
             print('wifi 扫描结果：{}'.format(i))
             print('wifi 对应设备的MAC地址: {}'.format(i))
             print('='*10)
-     
+            found =False
             for p in self.password_list:
                 
                 if self.connect(i,p.strip()):
+                    found =True
                     break
                 else:
                     pass
-
+            if not found:
+                print('not found')
+                try:
+                    with open('ignore_list.txt','a') as f:
+                        f.write(i+'\n')
+                except Exception as e:
+                    print(e)
+                    pass
+     
             
     def wifi_connect_status(self):
             if self.iface.status() in [const.IFACE_CONNECTED,const.IFACE_INACTIVE]:
@@ -88,6 +119,7 @@ class WIFI(BaseServices):
 
         else:
             # print('连接失败')
+            # self.fp.write(ssid+'\n')
             return False
 
     def disconnect(self,sleep_time=DEFAULT):
